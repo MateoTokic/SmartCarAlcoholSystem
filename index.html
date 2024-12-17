@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="styles.css">
+        <title>Smart Car Alcohol System</title>
+        <style>
+            body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            }
+
+            body.green-background {
+            background-color: #8FED8F;
+            }
+
+            body.red-background {
+            background-color: #FF8F8F;
+            }
+
+            header, footer {
+            width: 100%;
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            }
+
+            nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            }
+
+            nav li {
+            display: inline;
+            margin-right: 20px;
+            }
+
+            main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            16
+            padding: 20px;
+            }
+
+            h2, p {
+            text-align: center;
+            margin-bottom: 10px;
+            }
+
+            /* Add styles for the table */
+            table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            }
+
+            th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            }
+
+            /* Add styles for buttons */
+            a.button {
+            display: inline-block;
+            padding: 10px 20px;
+            text-decoration: none;
+            color: black;
+            background-color: white;
+            border: 1px solid #333;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            }
+
+            a.button:hover {
+            background-color: #333;
+            color: white;
+            }
+
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Smart Car Alcohol System</h1>
+            <nav>
+                <ul>
+                    <li><a class="button" href="previous-results.html">Previous results</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+        
+        </main>
+
+        <footer>
+            <p>Project created by students Petar Pavić and Mateo Tokić</p>
+        </footer>
+        <script>
+            const socket = new WebSocket('ws://localhost:8888/ws');
+            
+            function canDrive(data) {
+                const lastData = data[data.length - 1];
+                return lastData.alcoholLevel <= 100;
+            }
+            
+            function displayUserStatus(data) {
+                const body = document.querySelector('body');
+                const mainContent = document.querySelector('main');
+                
+                const sober = canDrive(data);
+                
+                body.classList.add(sober ? 'green-background' : 'red-background');
+                body.classList.remove(sober ? 'red-background' : 'green-background');
+                
+                const canvas = document.createElement('canvas');
+                canvas.id = 'pieChart';
+                mainContent.innerHTML = '';
+                mainContent.appendChild(canvas);
+                
+                const alcoholLevel = data[data.length - 1].alcoholLevel;
+                
+                const chartData = {
+                    labels: ['Sober', 'Drunk'],
+                    datasets: [{
+                        data: [alcoholLevel, Math.max(0, 300 - alcoholLevel)],
+                        backgroundColor: [sober ? '#8FED8F' : 'transparent', sober ? 'transparent' : '#FF8F8F'],
+                        borderColor: [sober ? '#8FED8F' : 'transparent', sober ? 'transparent' : '#FF8F8F'],
+                        borderWidth: 1,
+                    }]
+                };
+                
+                new Chart(canvas, {
+                    type: 'pie',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        legend: {
+                            display: false
+                        }
+                    }
+                    });
+            }
+            
+            socket.addEventListener('message', function(event) {
+                const receivedData = JSON.parse(event.data);
+                displayUserStatus(receivedData);
+            });
+            
+            socket.addEventListener('open', function(event) {
+                console.log('WebSocket connection opened');
+            });
+            
+            socket.addEventListener('error', function(event) {
+                console.error('WebSocket error:', event);
+            });
+            
+            socket.addEventListener('close', function(event) {
+                console.log('WebSocket connection closed');
+            });
+        </script>
+    </body>
+</html>

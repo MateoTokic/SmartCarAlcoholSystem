@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="styles.css">
+        <title>Previous Results</title>
+        <style>
+            body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            }
+            header, footer {
+            width: 100%;
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            }
+            nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            }
+            nav li {
+            19
+            display: inline;
+            margin-right: 20px;
+            }
+            main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Smart Car Alcohol System</h1>
+            <nav>
+                <ul>
+                    <li><a class="button" href="index.html">Main page</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <table id="resultsTable">
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Alcohol Level</th>
+                    <th>Can Drive</th>
+                </tr>
+            </table>
+            <div id="lineChart"></div>
+        </main>
+
+        <footer>
+            <p>Project created by students Petar Pavić and Mateo Tokić</p>
+        </footer>
+        
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+        
+        <script >
+            function displayResults(data) {
+                const table = document.getElementById('resultsTable');
+
+                data.forEach(result => {
+                    const row = table.insertRow();
+                    row.innerHTML =
+                    `<td>${result.date}</td><td>${result.time}</td><td>${result.alcoholLevel}</td><td>${result.canDrive ?
+                    'Yes' : 'No'}</td>`;
+                });
+            }
+
+            
+            function createLineChart(data) {
+                const margin = { top: 20, right: 30, bottom: 50, left: 50 };
+                const width = 600 - margin.left - margin.right;
+                const height = 400 - margin.top - margin.bottom;
+                
+                const svg = d3.select('#lineChart')
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+                
+                const xScale = d3.scaleBand()
+                .domain(data.map(d => `${d.date}\n${d.time}`))
+                .range([0, width])
+                .padding(0.1);
+
+                const yScale = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.alcoholLevel)])
+                .range([height, 0]);
+
+
+                svg.append('g')
+                .attr('transform', `translate(0, ${height})`)
+                .call(d3.axisBottom(xScale).tickSize(0).tickPadding(10))
+                .selectAll('text')
+                .style('text-anchor', 'end')
+                .attr('transform', 'rotate(-45)');
+
+                svg.append('g')
+                .call(d3.axisLeft(yScale));
+
+                svg.selectAll('.bar')
+                .data(data)
+                .enter().append('rect')
+                .attr('class', 'bar')
+                .attr('x', d => xScale(`${d.date}\n${d.time}`))
+                .attr('width', xScale.bandwidth())
+                .attr('y', d => yScale(d.alcoholLevel))
+                .attr('height', d => height - yScale(d.alcoholLevel))
+                .attr('fill', d => d.alcoholLevel > 300 ? 'red' : 'green');
+            }
+
+            displayResults(testData);
+
+            createLineChart(testData);
+
+        </script>
+    </body>
+</html>
